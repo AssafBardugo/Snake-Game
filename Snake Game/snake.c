@@ -78,7 +78,22 @@ void increaseSnake(int new_x, int new_y){
 }
 
 
+void moveSnakeRecursive(Snake* track){
+
+    if(track->next == NULL){
+        return;
+    }else{
+        moveSnakeRecursive(track->next);
+    }
+
+    track->next->x = track->x;
+    track->next->y = track->y;
+}
+
+
 void moveSnake(){
+
+    moveSnakeRecursive(head);
 
     switch(head->direction){
         case SNAKE_UP:
@@ -143,6 +158,9 @@ void renderGrid(SDL_Renderer* renderer, int x, int y){
 int main(int argc, char* argv[]){
 
     initSnake();
+    increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
+    increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
+    increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
     increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
 
 
