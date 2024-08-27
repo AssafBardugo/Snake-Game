@@ -19,14 +19,18 @@
 #endif
 
 
-#define KEY_LEFT    SDLK_j
-#define KEY_RIGHT   SDLK_l
-#define KEY_UP      SDLK_i
-#define KEY_DOWN    SDLK_k
+#define LEFT_KEY    SDLK_j
+#define RIGHT_KEY   SDLK_l
+#define UP_KEY      SDLK_i
+#define DOWN_KEY    SDLK_k
 
+#define USE_GRID_BOARD false
 #define GRID_SIZE 25
 #define GRID_DIMENSION 400
 #define CELL_SIZE (GRID_DIMENSION / GRID_SIZE)
+
+#define FIRST_INSTANCE_SNAKE_LENGTH 2
+#define CRASH_DELAY_TIME 500
 
 typedef enum SNAKE_DIRECTION{
     SNAKE_UP, 
@@ -47,12 +51,16 @@ typedef struct snake{
     struct snake* next;
 } Snake;
 
-Apple apple;
-Snake* head;
-// Snake* tail;
-Snake_Dir direction;
+/***** Global Variables *****/
 
+Apple apple;
+Snake* snake_head;
+Snake_Dir direction;
 int score = 0;
+int record = 0;     // TODO: save in a file.
+int delay_time = 200;
+
+/****************************/
 
 
 void initSnake(){
@@ -63,8 +71,12 @@ void initSnake(){
     new_snake->y = rand() % (GRID_SIZE / 2) + (GRID_SIZE / 4);
     new_snake->next = NULL;
 
-    head = new_snake;
+    snake_head = new_snake;
     direction = rand() % DIRECTIONS_COUNT;
+
+    for(int i = 1; i < FIRST_INSTANCE_SNAKE_LENGTH; ++i){
+        increaseSnake();
+    }
 }
 
 
@@ -77,15 +89,24 @@ void freeSnake(Snake* to_free){
 }
 
 
+int snakeLength(){
+    return score + 2;
+}
+
+
 void increaseSnake(){
+
+    if(snakeLength() > (int)(0.25 * GRID_SIZE * GRID_SIZE)){
+        // TODO: Has to jump to a new level
+    }
 
     Snake* new_snake = malloc(sizeof(Snake));
 
-    new_snake->x = head->x;
-    new_snake->y = head->y;
-    new_snake->next = head;
+    new_snake->x = snake_head->x;
+    new_snake->y = snake_head->y;
+    new_snake->next = snake_head;
 
-    head = new_snake;
+    snake_head = new_snake;
 }
 
 
@@ -104,20 +125,20 @@ void moveSnakeRecursive(Snake* track){
 
 void moveSnake(){
 
-    moveSnakeRecursive(head);
+    moveSnakeRecursive(snake_head);
 
     switch(direction){
         case SNAKE_UP:
-            --head->y;
+            --snake_head->y;
             break;
         case SNAKE_DOWN:
-            ++head->y;
+            ++snake_head->y;
             break;
         case SNAKE_LEFT:
-            --head->x;
+            --snake_head->x;
             break;
         case SNAKE_RIGHT:
-            ++head->x;
+            ++snake_head->x;
             break;
         default:
             break;
@@ -127,19 +148,69 @@ void moveSnake(){
 
 void genApple(){
 
-    apple.x = rand() % GRID_SIZE;   // TODO: Make sure the cell is not a part of the snake.
+    apple.x = rand() % GRID_SIZE;
     apple.y = rand() % GRID_SIZE;
+
+    // Make sure the apple's cell is not belong to the snake.
+    Snake* track = snake_head;
+    while(track != NULL){
+
+        if(track->x == apple.x && track->y == apple.y){
+            genApple();
+            break;
+        }
+        track = track->next;
+    }
 }
 
 
 void detectApple(){
 
     // Look if the snake is eating the apple:
-    if(head->x == apple.x && head->y == apple.y){
+    if(snake_head->x == apple.x && snake_head->y == apple.y){
 
         increaseSnake();
         genApple();
         ++score;
+    }
+}
+
+
+void resetSnake(){
+
+    Snake* to_free = snake_head;
+    
+    initSnake();
+    genApple();
+    // TODO: saveScore()
+    score = 0;
+
+    freeSnake(to_free);
+    SDL_Delay(CRASH_DELAY_TIME);
+}
+
+
+void detectCrash(){
+
+    // Does the snake touch the borders?
+    if(snake_head->x < 0 || snake_head->x >= GRID_SIZE || snake_head->y < 0 || snake_head->y >= GRID_SIZE){
+        // Crash!
+        resetSnake();
+    }
+
+    // Does the snake touch itself?
+    if(snakeLength() < 5){
+        // Can't be possible
+        return;
+    }
+    Snake* track = snake_head->next->next->next;
+    while(track != NULL){
+
+        if(snake_head->x == track->x && snake_head->y == track->y){
+            // Crash!
+            resetSnake();
+        }
+        track = track->next;
     }
 }
 
@@ -166,7 +237,7 @@ void renderSnake(SDL_Renderer* renderer, int x, int y){
     segment.w = CELL_SIZE;
     segment.h = CELL_SIZE;
 
-    Snake* track = head;
+    Snake* track = snake_head;
     while(track != NULL){
 
         segment.x = x + (track->x * CELL_SIZE);
@@ -199,13 +270,25 @@ void renderGrid(SDL_Renderer* renderer, int x, int y){
 }
 
 
+void renderOutline(SDL_Renderer* renderer, int x, int y){
+
+    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0xff, 255);
+
+    SDL_Rect outline;
+    outline.x = x;
+    outline.y = y;
+    outline.w = GRID_DIMENSION;
+    outline.h = GRID_DIMENSION;
+
+    SDL_RenderDrawRect(renderer, &outline);
+}
+
+
 int main(int argc, char* argv[]){
 
     srand(time(NULL));
 
     initSnake();
-    increaseSnake();
-
     genApple();
 
     SDL_Window* window;
@@ -222,42 +305,46 @@ int main(int argc, char* argv[]){
         WINDOW_Y,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
+        // SDL_WINDOW_BORDERLESS || SDL_WINDOW_INPUT_GRABBED
+        // SDL_WINDOW_INPUT_GRABBED
         SDL_WINDOW_BORDERLESS
     );
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    bool quit = false;
     SDL_Event event;
 
-    while(!quit){
+    while(true){
         while(SDL_PollEvent(&event)){
             switch(event.type){
                 case SDL_QUIT:
-                    quit = true;
-                    break;
+                    goto GameQuit;
                 case SDL_KEYUP:
                     break;
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym){
-                        case KEY_LEFT:
-                            direction = SNAKE_LEFT;
+                        case LEFT_KEY:
+                            if(direction != SNAKE_RIGHT)
+                                direction = SNAKE_LEFT;
                             break;
-                        case KEY_RIGHT:
-                            direction = SNAKE_RIGHT;
+                        case RIGHT_KEY:
+                            if(direction != SNAKE_LEFT)
+                                direction = SNAKE_RIGHT;
                             break;
-                        case KEY_UP:
-                            direction = SNAKE_UP;
+                        case UP_KEY:
+                            if(direction != SNAKE_DOWN)
+                                direction = SNAKE_UP;
                             break;
-                        case KEY_DOWN:
-                            direction = SNAKE_DOWN;
+                        case DOWN_KEY:
+                            if(direction != SNAKE_UP)
+                                direction = SNAKE_DOWN;
                             break;
                         case SDLK_ESCAPE:
-                            quit = true;
-                            break;
+                            goto GameQuit;
                         default:
                             break;
                     }
+                default:
                     break;
             }
         }
@@ -267,10 +354,15 @@ int main(int argc, char* argv[]){
 
         moveSnake();
         detectApple();
+        detectCrash();
 
         int grid_x = (WINDOW_WIDTH / 2) - (GRID_DIMENSION / 2);
         int grid_y = (WINDOW_HEIGHT / 2) - (GRID_DIMENSION / 2);
+#if USE_GRID_BOARD
         renderGrid(renderer, grid_x, grid_y);
+#else
+        renderOutline(renderer, grid_x, grid_y);
+#endif
         renderSnake(renderer, grid_x, grid_y);
         renderApple(renderer, grid_x, grid_y);
 
@@ -278,14 +370,13 @@ int main(int argc, char* argv[]){
         SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, 255);
         SDL_RenderPresent(renderer);
 
-        SDL_Delay(200);
+        SDL_Delay(delay_time);
     }
-
+GameQuit:
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-    freeSnake(head);
-
+    freeSnake(snake_head);
     return 0;
 }
