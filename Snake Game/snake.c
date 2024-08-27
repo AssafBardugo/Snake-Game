@@ -41,31 +41,30 @@ typedef struct {
     int y;
 } Apple;
 
-Apple apple;
-
 typedef struct snake{
     int x;
     int y;
-    Snake_Dir direction;
     struct snake* next;
 } Snake;
 
+Apple apple;
 Snake* head;
-Snake* tail;
+// Snake* tail;
+Snake_Dir direction;
+
+int score = 0;
+
 
 void initSnake(){
 
     Snake* new_snake = malloc(sizeof(Snake));
 
-    srand(time(NULL));
-
     new_snake->x = rand() % (GRID_SIZE / 2) + (GRID_SIZE / 4);
     new_snake->y = rand() % (GRID_SIZE / 2) + (GRID_SIZE / 4);
-    new_snake->direction = rand() % DIRECTIONS_COUNT;
     new_snake->next = NULL;
 
     head = new_snake;
-    tail = new_snake;
+    direction = rand() % DIRECTIONS_COUNT;
 }
 
 
@@ -78,13 +77,12 @@ void freeSnake(Snake* to_free){
 }
 
 
-void increaseSnake(int new_x, int new_y){
+void increaseSnake(){
 
     Snake* new_snake = malloc(sizeof(Snake));
 
-    new_snake->x = new_x;
-    new_snake->y = new_y;
-    new_snake->direction = head->direction;
+    new_snake->x = head->x;
+    new_snake->y = head->y;
     new_snake->next = head;
 
     head = new_snake;
@@ -101,7 +99,6 @@ void moveSnakeRecursive(Snake* track){
 
     track->next->x = track->x;
     track->next->y = track->y;
-    track->next->direction = track->direction;
 }
 
 
@@ -109,7 +106,7 @@ void moveSnake(){
 
     moveSnakeRecursive(head);
 
-    switch(head->direction){
+    switch(direction){
         case SNAKE_UP:
             --head->y;
             break;
@@ -130,18 +127,34 @@ void moveSnake(){
 
 void genApple(){
 
-    srand(time(NULL));
-
     apple.x = rand() % GRID_SIZE;   // TODO: Make sure the cell is not a part of the snake.
     apple.y = rand() % GRID_SIZE;
 }
 
 
+void detectApple(){
+
+    // Look if the snake is eating the apple:
+    if(head->x == apple.x && head->y == apple.y){
+
+        increaseSnake();
+        genApple();
+        ++score;
+    }
+}
+
+
 void renderApple(SDL_Renderer* renderer, int x, int y){
 
-    SDL_Rect apple;
+    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 255);
 
+    SDL_Rect apple_seg;
+    apple_seg.w = CELL_SIZE;
+    apple_seg.h = CELL_SIZE;
+    apple_seg.x = x + apple.x * CELL_SIZE;
+    apple_seg.y = y + apple.y * CELL_SIZE;
 
+    SDL_RenderFillRect(renderer, &apple_seg);
 }
 
 
@@ -188,12 +201,12 @@ void renderGrid(SDL_Renderer* renderer, int x, int y){
 
 int main(int argc, char* argv[]){
 
-    initSnake();
-    increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
-    increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
-    increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
-    increaseSnake(head->x + 1, head->y);    // TODO: should depand on the head's direction
+    srand(time(NULL));
 
+    initSnake();
+    increaseSnake();
+
+    genApple();
 
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -228,16 +241,16 @@ int main(int argc, char* argv[]){
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym){
                         case KEY_LEFT:
-                            head->direction = SNAKE_LEFT;
+                            direction = SNAKE_LEFT;
                             break;
                         case KEY_RIGHT:
-                            head->direction = SNAKE_RIGHT;
+                            direction = SNAKE_RIGHT;
                             break;
                         case KEY_UP:
-                            head->direction = SNAKE_UP;
+                            direction = SNAKE_UP;
                             break;
                         case KEY_DOWN:
-                            head->direction = SNAKE_DOWN;
+                            direction = SNAKE_DOWN;
                             break;
                         case SDLK_ESCAPE:
                             quit = true;
@@ -253,11 +266,13 @@ int main(int argc, char* argv[]){
         // render loop start
 
         moveSnake();
+        detectApple();
 
         int grid_x = (WINDOW_WIDTH / 2) - (GRID_DIMENSION / 2);
         int grid_y = (WINDOW_HEIGHT / 2) - (GRID_DIMENSION / 2);
         renderGrid(renderer, grid_x, grid_y);
         renderSnake(renderer, grid_x, grid_y);
+        renderApple(renderer, grid_x, grid_y);
 
         // render loop end
         SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, 255);
