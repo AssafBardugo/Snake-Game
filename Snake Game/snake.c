@@ -18,6 +18,12 @@
 
 #endif
 
+
+#define KEY_LEFT    SDLK_j
+#define KEY_RIGHT   SDLK_l
+#define KEY_UP      SDLK_i
+#define KEY_DOWN    SDLK_k
+
 #define GRID_SIZE 25
 #define GRID_DIMENSION 400
 #define CELL_SIZE (GRID_DIMENSION / GRID_SIZE)
@@ -29,6 +35,13 @@ typedef enum SNAKE_DIRECTION{
     SNAKE_RIGHT, 
     DIRECTIONS_COUNT
 } Snake_Dir;
+
+typedef struct {
+    int x;
+    int y;
+} Apple;
+
+Apple apple;
 
 typedef struct snake{
     int x;
@@ -88,6 +101,7 @@ void moveSnakeRecursive(Snake* track){
 
     track->next->x = track->x;
     track->next->y = track->y;
+    track->next->direction = track->direction;
 }
 
 
@@ -111,6 +125,23 @@ void moveSnake(){
         default:
             break;
     }
+}
+
+
+void genApple(){
+
+    srand(time(NULL));
+
+    apple.x = rand() % GRID_SIZE;   // TODO: Make sure the cell is not a part of the snake.
+    apple.y = rand() % GRID_SIZE;
+}
+
+
+void renderApple(SDL_Renderer* renderer, int x, int y){
+
+    SDL_Rect apple;
+
+
 }
 
 
@@ -195,11 +226,23 @@ int main(int argc, char* argv[]){
                 case SDL_KEYUP:
                     break;
                 case SDL_KEYDOWN:
-                    // if(event.key.keysym.sym == SDLK_ESCAPE)
-                    //     quit = true;
                     switch(event.key.keysym.sym){
+                        case KEY_LEFT:
+                            head->direction = SNAKE_LEFT;
+                            break;
+                        case KEY_RIGHT:
+                            head->direction = SNAKE_RIGHT;
+                            break;
+                        case KEY_UP:
+                            head->direction = SNAKE_UP;
+                            break;
+                        case KEY_DOWN:
+                            head->direction = SNAKE_DOWN;
+                            break;
                         case SDLK_ESCAPE:
                             quit = true;
+                            break;
+                        default:
                             break;
                     }
                     break;
