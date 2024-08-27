@@ -1,17 +1,17 @@
 
-# Console Snake Game in C
+# Snake Game in C using SDL
 
 Compilation and running:
 ```
-$ gcc -o snake main.c
+$ make
 $ ./snake
 ```
 
 Control keys:
 ```
+j - left
+l - right
+i - up
+k - down
 Esc - quit
-h - left
-j - down
-k - up
-l - left
 ```
