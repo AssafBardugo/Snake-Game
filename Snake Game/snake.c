@@ -26,8 +26,15 @@ void freeSnake(Snake* to_free){
 }
 
 
+int getIntScore(){
+
+    return atoi(score_text + strlen(score_text) - 3);
+}
+
+
 int snakeLength(){
-    return score + 2;
+    
+    return getIntScore() + FIRST_INSTANCE_SNAKE_LENGTH;
 }
 
 
@@ -36,6 +43,8 @@ void increaseSnake(){
     if(snakeLength() > (int)(0.25 * GRID_X_SIZE * GRID_Y_SIZE)){
         // TODO: Has to jump to a new level
     }
+
+    // TODO: Eventually, it appears that the new cell HAS to be added to the tail
 
     Snake* new_cell = malloc(sizeof(Snake));
 
@@ -62,6 +71,31 @@ void increaseSnake(){
 
     new_cell->next = snake_head;
     snake_head = new_cell;
+}
+
+
+void increaseScore(){
+
+    int i = strlen(score_text) - 1;
+
+    for(int j = i; j > i - 3; --j){
+
+        if(score_text[j] < '9'){
+            ++score_text[j];
+            return;
+        }
+        score_text[j] = '0';
+    }
+
+    // Here Score > 999. Probably bug to fix.
+    printf("The Score exceeded the allowed limit.\n");
+    exit(0);
+}
+
+
+void resetScore(){
+
+    strcpy(score_text + strlen(score_text) - 3, "000");
 }
 
 
@@ -126,19 +160,25 @@ void detectApple(){
 
         increaseSnake();
         genApple();
-        ++score;
+        increaseScore();
     }
 }
 
 
 void resetSnake(){
+    
+    int curr_score = getIntScore();
+    if(curr_score > record){
+
+        record = curr_score;
+        // TODO: Print (render) some kind of record breaking message
+    }
+    resetScore();
 
     Snake* to_free = snake_head;
     
     initSnake();
     genApple();
-    // TODO: saveScore()
-    score = 0;
 
     freeSnake(to_free);
     SDL_Delay(CRASH_DELAY_TIME);
@@ -146,7 +186,7 @@ void resetSnake(){
 
 
 void detectCrash(){
-
+    
     // Does the snake touch the borders?
     if(snake_head->x < 0 || snake_head->x >= GRID_X_SIZE || snake_head->y < 0 || snake_head->y >= GRID_Y_SIZE){
         // Crash!
@@ -172,7 +212,7 @@ void detectCrash(){
 
 void renderApple(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 255);
+    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, SDL_ALPHA_OPAQUE);
 
     SDL_Rect apple_seg;
     apple_seg.w = CELL_SIZE;
@@ -186,7 +226,7 @@ void renderApple(SDL_Renderer* renderer){
 
 void renderSnake(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, 255);
+    SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
 
     SDL_Rect segment;
     segment.w = CELL_SIZE;
@@ -207,7 +247,7 @@ void renderSnake(SDL_Renderer* renderer){
 
 void renderGrid(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, 255);
+    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, SDL_ALPHA_OPAQUE);
 
     SDL_Rect cell;
     cell.w = CELL_SIZE;
@@ -227,7 +267,7 @@ void renderGrid(SDL_Renderer* renderer){
 
 void renderOutline(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0xff, 255);
+    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0xff, SDL_ALPHA_OPAQUE);
 
     SDL_Rect outline;
     outline.x = GRID_X;
@@ -241,7 +281,7 @@ void renderOutline(SDL_Renderer* renderer){
 
 void renderMonitor(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, 255);
+    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, SDL_ALPHA_OPAQUE);
 
     SDL_Rect monitor;
     monitor.x = MONITOR_X;
@@ -250,4 +290,20 @@ void renderMonitor(SDL_Renderer* renderer){
     monitor.h = MONITOR_HEIGHT;
 
     SDL_RenderDrawRect(renderer, &monitor);
+}
+
+
+void renderText(SDL_Renderer* renderer, TTF_Font* font){
+
+    SDL_Surface* surface = TTF_RenderText_Solid(font, score_text, sdl_white);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_Rect dest_rect = {SCORE_X, SCORE_Y, 0, 0};
+
+    TTF_SizeText(font, score_text, &dest_rect.w, &dest_rect.h);
+
+    SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
+
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
 }

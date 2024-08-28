@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra
 
 INCLUDES = -Isrc/Include -Lsrc/lib
-LIBS = -lSDL2main -lSDL2
+LIBS = -lSDL2main -lSDL2 -lSDL2_ttf
 
 SRCS = main.c snake.c
 OBJS = $(SRCS:.c=.o)

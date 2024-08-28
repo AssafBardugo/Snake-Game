@@ -4,24 +4,34 @@
 Apple apple;
 Snake* snake_head;
 Snake_Dir direction;
-int score = 0;
+
+char* score_text;
+const char* score_message = "Score: 000";
+const char* font_file_path = "src/font_file/Retro_Gaming.ttf";
+
 int record = 0;     // TODO: save in a file.
 int delay_time = 200;
 
+SDL_Color sdl_white = {255, 255, 255, 255}; // TODO: add all rest colors to here.
+/***************************/
 
 int main(int argc, char* argv[]){
 
-    srand(time(NULL));
-
-    initSnake();
-    genApple();
-
     SDL_Window* window;
     SDL_Renderer* renderer;
+    SDL_Event event;
+    TTF_Font* font;
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0){
         printf("Error: SDL failed to initialize\nSDL Error: '%s'\n", SDL_GetError());
-        return 1;
+        return 0;
+    }
+
+    TTF_Init();
+    font = TTF_OpenFont(font_file_path, TEXT_FONT_SIZE);
+    if(font == NULL){
+        printf("Failed to load font: %s\n", TTF_GetError());
+        return 0;
     }
 
     window = SDL_CreateWindow(
@@ -34,10 +44,14 @@ int main(int argc, char* argv[]){
         // SDL_WINDOW_INPUT_GRABBED
         SDL_WINDOW_BORDERLESS
     );
-
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    SDL_Event event;
+    score_text = (char*)malloc((strlen(score_message) + 1) * sizeof(char));
+    strcpy(score_text, score_message);
+
+    srand(time(NULL));
+    initSnake();
+    genApple();
 
     while(true){
         while(SDL_PollEvent(&event)){
@@ -66,6 +80,7 @@ int main(int argc, char* argv[]){
                             break;
                         case SDLK_ESCAPE:
                             goto GameQuit;
+                            // TODO: add pause key
                         default:
                             break;
                     }
@@ -81,17 +96,18 @@ int main(int argc, char* argv[]){
         detectApple();
         detectCrash();
 
+        renderSnake(renderer);
+        renderApple(renderer);
 #if USE_GRID_BOARD
         renderGrid(renderer);
 #else
         renderOutline(renderer);
 #endif
-        renderSnake(renderer);
-        renderApple(renderer);
         renderMonitor(renderer);
+        renderText(renderer, font);
         /* Render loop end */
 
-        SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, 255);
+        SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, SDL_ALPHA_OPAQUE);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(delay_time);
@@ -100,7 +116,10 @@ GameQuit:
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    TTF_CloseFont(font);
+    TTF_Quit();
     SDL_Quit();
     freeSnake(snake_head);
+    free(score_text);
     return 0;
 }

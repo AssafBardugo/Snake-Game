@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <time.h>
 #include <SDL.h>
+#include <SDL_ttf.h>
 
 /*** Can modify by the user ***/
 #define FULLSCREEN false
@@ -16,8 +18,10 @@
 #define UP_KEY      SDLK_i
 #define DOWN_KEY    SDLK_k
 
-#define FIRST_INSTANCE_SNAKE_LENGTH 2   // at least 1
+#define FIRST_INSTANCE_SNAKE_LENGTH 3   // at least 1
 #define CRASH_DELAY_TIME 500    // in ms
+
+#define TEXT_FONT_SIZE 28
 /*******************************/
 
 
@@ -43,6 +47,7 @@
 #define GRID_X      50
 #define GRID_Y      50
 
+// GRID SIZE:
 #define CELL_SIZE 25
 #define GRID_X_SIZE (GRID_WIDTH / CELL_SIZE)
 #define GRID_Y_SIZE (GRID_HEIGHT / CELL_SIZE)
@@ -51,7 +56,11 @@
 #define MONITOR_WIDTH   (((WINDOW_WIDTH - 100) / 3) - 25)
 #define MONITOR_HEIGHT  GRID_HEIGHT
 #define MONITOR_X       (GRID_X + GRID_WIDTH + 25)
-#define MONITOR_Y       GRID_Y    
+#define MONITOR_Y       GRID_Y   
+
+// SCORE-MESSAGE POSITION:
+#define SCORE_X       (MONITOR_X + 13)
+#define SCORE_Y       (MONITOR_Y + (MONITOR_HEIGHT / 5))
 
 
 typedef enum SNAKE_DIRECTION{
@@ -77,16 +86,22 @@ typedef struct snake{
 extern Apple apple;
 extern Snake* snake_head;
 extern Snake_Dir direction;
-extern int score;
+extern char* score_text;
+extern const char* font_file_path;
 extern int record;
 extern int delay_time;
+extern SDL_Color sdl_white;
 
 
 void initSnake();
 void freeSnake(Snake* to_free);
 
+int getIntScore();
 int snakeLength();
 void increaseSnake();
+void increaseScore();
+void resetScore();
+
 void moveSnakeRecursive(Snake* track);
 void moveSnake();
 
@@ -101,5 +116,6 @@ void renderSnake(SDL_Renderer* renderer);
 void renderGrid(SDL_Renderer* renderer);
 void renderOutline(SDL_Renderer* renderer);
 void renderMonitor(SDL_Renderer* renderer);
+void renderText(SDL_Renderer* renderer, TTF_Font* font);
 
 #endif /* SNAKE_H */
