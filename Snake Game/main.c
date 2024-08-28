@@ -88,6 +88,7 @@ int main(int argc, char* argv[]){
 #endif
         renderSnake(renderer);
         renderApple(renderer);
+        renderMonitor(renderer);
         /* Render loop end */
 
         SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, 255);

@@ -3,15 +3,16 @@
 
 Compilation and running:
 ```
-$ gcc -o snake main.c
+$ ./build.sh
 $ ./snake
 ```
 
 Control keys:
 ```
-Esc - quit
 h - left
 j - down
 k - up
 l - left
+
+Esc - quit
 ```

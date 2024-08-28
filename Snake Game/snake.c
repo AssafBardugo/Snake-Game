@@ -4,8 +4,8 @@ void initSnake(){
 
     Snake* new_snake = malloc(sizeof(Snake));
 
-    new_snake->x = rand() % (GRID_SIZE / 2) + (GRID_SIZE / 4);
-    new_snake->y = rand() % (GRID_SIZE / 2) + (GRID_SIZE / 4);
+    new_snake->x = (rand() % (GRID_X_SIZE / 2)) + (GRID_X_SIZE / 4);
+    new_snake->y = (rand() % (GRID_Y_SIZE / 2)) + (GRID_Y_SIZE / 4);
     new_snake->next = NULL;
 
     snake_head = new_snake;
@@ -33,7 +33,7 @@ int snakeLength(){
 
 void increaseSnake(){
 
-    if(snakeLength() > (int)(0.25 * GRID_SIZE * GRID_SIZE)){
+    if(snakeLength() > (int)(0.25 * GRID_X_SIZE * GRID_Y_SIZE)){
         // TODO: Has to jump to a new level
     }
 
@@ -103,8 +103,8 @@ void moveSnake(){
 
 void genApple(){
 
-    apple.x = rand() % GRID_SIZE;
-    apple.y = rand() % GRID_SIZE;
+    apple.x = rand() % GRID_X_SIZE;
+    apple.y = rand() % GRID_Y_SIZE;
 
     // Make sure the apple's cell is not belong to the snake.
     Snake* track = snake_head;
@@ -148,7 +148,7 @@ void resetSnake(){
 void detectCrash(){
 
     // Does the snake touch the borders?
-    if(snake_head->x < 0 || snake_head->x >= GRID_SIZE || snake_head->y < 0 || snake_head->y >= GRID_SIZE){
+    if(snake_head->x < 0 || snake_head->x >= GRID_X_SIZE || snake_head->y < 0 || snake_head->y >= GRID_Y_SIZE){
         // Crash!
         resetSnake();
     }
@@ -213,8 +213,8 @@ void renderGrid(SDL_Renderer* renderer){
     cell.w = CELL_SIZE;
     cell.h = CELL_SIZE;
 
-    for(int i = 0; i < GRID_SIZE; ++i){
-        for(int j = 0; j < GRID_SIZE; ++j){
+    for(int i = 0; i < GRID_X_SIZE; ++i){
+        for(int j = 0; j < GRID_Y_SIZE; ++j){
 
             cell.x = GRID_X + (i * CELL_SIZE);
             cell.y = GRID_Y + (j * CELL_SIZE);
@@ -232,8 +232,22 @@ void renderOutline(SDL_Renderer* renderer){
     SDL_Rect outline;
     outline.x = GRID_X;
     outline.y = GRID_Y;
-    outline.w = GRID_DIMENSION;
-    outline.h = GRID_DIMENSION;
+    outline.w = GRID_WIDTH;
+    outline.h = GRID_HEIGHT;
 
     SDL_RenderDrawRect(renderer, &outline);
+}
+
+
+void renderMonitor(SDL_Renderer* renderer){
+
+    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, 255);
+
+    SDL_Rect monitor;
+    monitor.x = MONITOR_X;
+    monitor.y = MONITOR_Y;
+    monitor.w = MONITOR_WIDTH;
+    monitor.h = MONITOR_HEIGHT;
+
+    SDL_RenderDrawRect(renderer, &monitor);
 }
