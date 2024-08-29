@@ -1,74 +1,22 @@
 #include "snake.h"
 
-#define FULLSCREEN 0
+void initText(){
 
-#if FULLSCREEN
+    score_text = (char*)malloc((strlen(score_message) + 1) * sizeof(char));
+    strcpy(score_text, score_message);
 
-    #define WINDOW_X SDL_WINDOWPOS_CENTERED
-    #define WINDOW_Y SDL_WINDOWPOS_CENTERED
-    #define WINDOW_WIDTH 1920
-    #define WINDOW_HEIGHT 1080
-
-#else
-
-    #define WINDOW_X 800
-    #define WINDOW_Y SDL_WINDOWPOS_CENTERED
-    #define WINDOW_WIDTH 700
-    #define WINDOW_HEIGHT 600
-
-#endif
-
-
-#define LEFT_KEY    SDLK_j
-#define RIGHT_KEY   SDLK_l
-#define UP_KEY      SDLK_i
-#define DOWN_KEY    SDLK_k
-
-#define USE_GRID_BOARD false
-#define GRID_SIZE 25
-#define GRID_DIMENSION 400
-#define CELL_SIZE (GRID_DIMENSION / GRID_SIZE)
-
-#define FIRST_INSTANCE_SNAKE_LENGTH 2
-#define CRASH_DELAY_TIME 500
-
-typedef enum SNAKE_DIRECTION{
-    SNAKE_UP, 
-    SNAKE_DOWN, 
-    SNAKE_LEFT, 
-    SNAKE_RIGHT, 
-    DIRECTIONS_COUNT
-} Snake_Dir;
-
-typedef struct {
-    int x;
-    int y;
-} Apple;
-
-typedef struct snake{
-    int x;
-    int y;
-    struct snake* next;
-} Snake;
-
-/***** Global Variables *****/
-
-Apple apple;
-Snake* snake_head;
-Snake_Dir direction;
-int score = 0;
-int record = 0;     // TODO: save in a file.
-int delay_time = 200;
-
-/****************************/
+    lives_text = (char*)malloc((strlen(lives_message) + 1) * sizeof(char));
+    strcpy(lives_text, lives_message);
+    resetLives();
+}
 
 
 void initSnake(){
 
     Snake* new_snake = malloc(sizeof(Snake));
 
-    new_snake->x = rand() % (GRID_SIZE / 2) + (GRID_SIZE / 4);
-    new_snake->y = rand() % (GRID_SIZE / 2) + (GRID_SIZE / 4);
+    new_snake->x = (rand() % (GRID_X_SIZE / 2)) + (GRID_X_SIZE / 4);
+    new_snake->y = (rand() % (GRID_Y_SIZE / 2)) + (GRID_Y_SIZE / 4);
     new_snake->next = NULL;
 
     snake_head = new_snake;
@@ -89,24 +37,124 @@ void freeSnake(Snake* to_free){
 }
 
 
+int getIntScore(){
+
+    return atoi(score_text + strlen(score_text) - 3);
+}
+
+
 int snakeLength(){
-    return score + 2;
+    
+    return getIntScore() + FIRST_INSTANCE_SNAKE_LENGTH;
 }
 
 
 void increaseSnake(){
 
-    if(snakeLength() > (int)(0.25 * GRID_SIZE * GRID_SIZE)){
+    if(snakeLength() > (int)(0.25 * GRID_X_SIZE * GRID_Y_SIZE)){
         // TODO: Has to jump to a new level
     }
 
-    Snake* new_snake = malloc(sizeof(Snake));
+    Snake* new_cell = malloc(sizeof(Snake));
 
-    new_snake->x = snake_head->x;
-    new_snake->y = snake_head->y;
-    new_snake->next = snake_head;
+    switch(direction){
+        case SNAKE_UP:
+            new_cell->x = snake_head->x;
+            new_cell->y = snake_head->y - 1;
+            break;
+        case SNAKE_DOWN:
+            new_cell->x = snake_head->x;
+            new_cell->y = snake_head->y + 1;
+            break;
+        case SNAKE_LEFT:
+            new_cell->x = snake_head->x - 1;
+            new_cell->y = snake_head->y;
+            break;
+        case SNAKE_RIGHT:
+            new_cell->x = snake_head->x + 1;
+            new_cell->y = snake_head->y;
+            break;
+        default:
+            break;
+    }
 
-    snake_head = new_snake;
+    new_cell->next = snake_head;
+    snake_head = new_cell;
+}
+
+
+void increaseScore(){
+
+    ++live_score;
+
+    int i = strlen(score_text) - 1;
+
+    for(int j = i; j > i - 3; --j){
+
+        if(score_text[j] < '9'){
+            ++score_text[j];
+            return;
+        }
+        score_text[j] = '0';
+    }
+
+    // Here Score > 999. Probably bug to fix.
+    printf("The Score exceeded the allowed limit.\n");
+    exit(0);
+}
+
+
+void resetScore(){
+
+    strcpy(score_text + strlen(score_text) - 3, "000");
+}
+
+
+void decreaseLives(){
+
+    live_score = 0;
+
+    int i = strlen(lives_text) - 1;
+    --lives_text[i];
+
+    if(lives_text[i] == '0'){
+        resetGame();
+    }
+
+    Snake* to_free = snake_head;
+    
+    initSnake();
+    genApple();
+
+    freeSnake(to_free);
+    SDL_Delay(CRASH_DELAY_TIME);
+}
+
+
+void resetGame(){
+    
+    // int curr_score = getIntScore();
+    // if(curr_score > record){
+
+    //     record = curr_score;
+    //     // TODO: Print (render) some kind of record breaking message
+    // }
+    resetScore();
+    resetLives();
+
+    Snake* to_free = snake_head;
+    
+    initSnake();
+    genApple();
+
+    freeSnake(to_free);
+    SDL_Delay(2 * CRASH_DELAY_TIME);
+}
+
+
+void resetLives(){
+
+    lives_text[strlen(lives_text) - 1] += SNAKE_LIVES;
 }
 
 
@@ -148,8 +196,8 @@ void moveSnake(){
 
 void genApple(){
 
-    apple.x = rand() % GRID_SIZE;
-    apple.y = rand() % GRID_SIZE;
+    apple.x = rand() % GRID_X_SIZE;
+    apple.y = rand() % GRID_Y_SIZE;
 
     // Make sure the apple's cell is not belong to the snake.
     Snake* track = snake_head;
@@ -165,37 +213,29 @@ void genApple(){
 
 
 void detectApple(){
+    static bool inc_next = false;
+    if(inc_next){
+        increaseSnake();
+        inc_next = false;
+    }
 
     // Look if the snake is eating the apple:
     if(snake_head->x == apple.x && snake_head->y == apple.y){
 
-        increaseSnake();
+        inc_next = true;
         genApple();
-        ++score;
+        increaseScore();
     }
 }
 
 
-void resetSnake(){
-
-    Snake* to_free = snake_head;
-    
-    initSnake();
-    genApple();
-    // TODO: saveScore()
-    score = 0;
-
-    freeSnake(to_free);
-    SDL_Delay(CRASH_DELAY_TIME);
-}
-
-
 void detectCrash(){
-
+    
     // Does the snake touch the borders?
-    if(snake_head->x < 0 || snake_head->x >= GRID_SIZE || snake_head->y < 0 || snake_head->y >= GRID_SIZE){
+    if(snake_head->x < 0 || snake_head->x >= GRID_X_SIZE || snake_head->y < 0 || snake_head->y >= GRID_Y_SIZE){
         // Crash!
-        resetSnake();
+        decreaseLives();
+        return;
     }
 
     // Does the snake touch itself?
@@ -208,61 +248,82 @@ void detectCrash(){
 
         if(snake_head->x == track->x && snake_head->y == track->y){
             // Crash!
-            resetSnake();
+            decreaseLives();
+            return;
         }
         track = track->next;
     }
 }
 
 
-void renderApple(SDL_Renderer* renderer, int x, int y){
+void renderApple(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 255);
+    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, SDL_ALPHA_OPAQUE);
 
     SDL_Rect apple_seg;
     apple_seg.w = CELL_SIZE;
     apple_seg.h = CELL_SIZE;
-    apple_seg.x = x + apple.x * CELL_SIZE;
-    apple_seg.y = y + apple.y * CELL_SIZE;
+    apple_seg.x = GRID_X + apple.x * CELL_SIZE;
+    apple_seg.y = GRID_Y + apple.y * CELL_SIZE;
 
     SDL_RenderFillRect(renderer, &apple_seg);
 }
 
 
-void renderSnake(SDL_Renderer* renderer, int x, int y){
+void renderSnake(SDL_Renderer* renderer){
+    static bool head_blinks = false;
+    if(pause){
+        head_blinks = 1 - head_blinks;
+    }else{
+        head_blinks = false;
+    }
 
-    SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, 255);
-
+    Snake* track = snake_head;
     SDL_Rect segment;
+    segment.x = GRID_X + (track->x * CELL_SIZE);
+    segment.y = GRID_Y + (track->y * CELL_SIZE);
     segment.w = CELL_SIZE;
     segment.h = CELL_SIZE;
 
-    Snake* track = snake_head;
+    if(!head_blinks){
+        SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
+        SDL_RenderFillRect(renderer, &segment);
+    }
+
+    track = track->next;
+    bool green_cell = false;
+
     while(track != NULL){
 
-        segment.x = x + (track->x * CELL_SIZE);
-        segment.y = y + (track->y * CELL_SIZE);
+        segment.x = GRID_X + (track->x * CELL_SIZE);
+        segment.y = GRID_Y + (track->y * CELL_SIZE);
 
+        if(green_cell){
+            SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
+        }else{
+            SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
+        }
         SDL_RenderFillRect(renderer, &segment);
 
         track = track->next;
+        green_cell = 1 - green_cell;
     }
 }
 
 
-void renderGrid(SDL_Renderer* renderer, int x, int y){
+void renderGrid(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, 255);
+    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, SDL_ALPHA_OPAQUE);
 
     SDL_Rect cell;
     cell.w = CELL_SIZE;
     cell.h = CELL_SIZE;
 
-    for(int i = 0; i < GRID_SIZE; ++i){
-        for(int j = 0; j < GRID_SIZE; ++j){
+    for(int i = 0; i < GRID_X_SIZE; ++i){
+        for(int j = 0; j < GRID_Y_SIZE; ++j){
 
-            cell.x = x + (i * CELL_SIZE);
-            cell.y = y + (j * CELL_SIZE);
+            cell.x = GRID_X + (i * CELL_SIZE);
+            cell.y = GRID_Y + (j * CELL_SIZE);
 
             SDL_RenderDrawRect(renderer, &cell);
         }
@@ -270,113 +331,43 @@ void renderGrid(SDL_Renderer* renderer, int x, int y){
 }
 
 
-void renderOutline(SDL_Renderer* renderer, int x, int y){
+void renderOutline(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0xff, 255);
+    SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
 
     SDL_Rect outline;
-    outline.x = x;
-    outline.y = y;
-    outline.w = GRID_DIMENSION;
-    outline.h = GRID_DIMENSION;
+    outline.x = GRID_X;
+    outline.y = GRID_Y;
+    outline.w = GRID_WIDTH;
+    outline.h = GRID_HEIGHT;
 
     SDL_RenderDrawRect(renderer, &outline);
 }
 
 
-int main(int argc, char* argv[]){
+void renderMonitor(SDL_Renderer* renderer){
 
-    srand(time(NULL));
+    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0x55, SDL_ALPHA_OPAQUE);
 
-    initSnake();
-    genApple();
+    SDL_Rect monitor;
+    monitor.x = MONITOR_X;
+    monitor.y = MONITOR_Y;
+    monitor.w = MONITOR_WIDTH;
+    monitor.h = MONITOR_HEIGHT;
 
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+    SDL_RenderDrawRect(renderer, &monitor);
+}
 
-    if(SDL_Init(SDL_INIT_VIDEO) < 0){
-        printf("Error: SDL failed to initialize\nSDL Error: '%s'\n", SDL_GetError());
-        return 1;
-    }
 
-    window = SDL_CreateWindow(
-        "Snake Game",
-        WINDOW_X,
-        WINDOW_Y,
-        WINDOW_WIDTH,
-        WINDOW_HEIGHT,
-        // SDL_WINDOW_BORDERLESS || SDL_WINDOW_INPUT_GRABBED
-        // SDL_WINDOW_INPUT_GRABBED
-        SDL_WINDOW_BORDERLESS
-    );
+void renderText(SDL_Renderer* renderer, TTF_Font* font, 
+                        const char* text, SDL_Rect rect, SDL_Color color){
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 
-    SDL_Event event;
+    TTF_SizeText(font, text, &rect.w, &rect.h);
+    SDL_RenderCopy(renderer, texture, NULL, &rect);
 
-    while(true){
-        while(SDL_PollEvent(&event)){
-            switch(event.type){
-                case SDL_QUIT:
-                    goto GameQuit;
-                case SDL_KEYUP:
-                    break;
-                case SDL_KEYDOWN:
-                    switch(event.key.keysym.sym){
-                        case LEFT_KEY:
-                            if(direction != SNAKE_RIGHT)
-                                direction = SNAKE_LEFT;
-                            break;
-                        case RIGHT_KEY:
-                            if(direction != SNAKE_LEFT)
-                                direction = SNAKE_RIGHT;
-                            break;
-                        case UP_KEY:
-                            if(direction != SNAKE_DOWN)
-                                direction = SNAKE_UP;
-                            break;
-                        case DOWN_KEY:
-                            if(direction != SNAKE_UP)
-                                direction = SNAKE_DOWN;
-                            break;
-                        case SDLK_ESCAPE:
-                            goto GameQuit;
-                        default:
-                            break;
-                    }
-                default:
-                    break;
-            }
-        }
-
-        SDL_RenderClear(renderer);
-        // render loop start
-
-        moveSnake();
-        detectApple();
-        detectCrash();
-
-        int grid_x = (WINDOW_WIDTH / 2) - (GRID_DIMENSION / 2);
-        int grid_y = (WINDOW_HEIGHT / 2) - (GRID_DIMENSION / 2);
-#if USE_GRID_BOARD
-        renderGrid(renderer, grid_x, grid_y);
-#else
-        renderOutline(renderer, grid_x, grid_y);
-#endif
-        renderSnake(renderer, grid_x, grid_y);
-        renderApple(renderer, grid_x, grid_y);
-
-        // render loop end
-        SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, 255);
-        SDL_RenderPresent(renderer);
-
-        SDL_Delay(delay_time);
-    }
-GameQuit:
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    freeSnake(snake_head);
-    return 0;
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
 }

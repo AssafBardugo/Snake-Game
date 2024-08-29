@@ -2,21 +2,20 @@ CC = gcc
 CFLAGS = -Wall -Wextra
 
 INCLUDES = -Isrc/Include -Lsrc/lib
-LIBS = -lSDL2main -lSDL2
+LIBS = -lSDL2main -lSDL2 -lSDL2_ttf
 
-SRCS = snake.c
+SRCS = main.c snake.c
 OBJS = $(SRCS:.c=.o)
 
-MAIN = snake
 
+snake: $(OBJS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o snake $(OBJS) $(LIBS)
 
-all: clean $(MAIN)
+main.o: main.c snake.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c main.c $(LIBS)
 
-$(MAIN): $(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LIBS)
-
-snake.o: snake.c
-	$(CC) $(CFLAGS) $(INCLUDES) -c snake.c -o snake.o
+snake.o: snake.c snake.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c snake.c $(LIBS)
 
 clean: 
-	rm -f *.o *~ $(MAIN)
+	rm -f $(OBJS)
