@@ -3,7 +3,7 @@
 
 Compilation and running:
 ```
-$ make
+$ ./build.sh
 $ ./snake
 ```
 
@@ -13,5 +13,7 @@ j - left
 l - right
 i - up
 k - down
+
+Space - pause
 Esc - quit
 ```
