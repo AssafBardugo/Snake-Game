@@ -14,5 +14,6 @@ j - down
 k - up
 l - left
 
+Space - pause
 Esc - quit
 ```

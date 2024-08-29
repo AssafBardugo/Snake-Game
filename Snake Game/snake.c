@@ -129,6 +129,27 @@ void decreaseLives(){
 }
 
 
+void resetGame(){
+    
+    // int curr_score = getIntScore();
+    // if(curr_score > record){
+
+    //     record = curr_score;
+    //     // TODO: Print (render) some kind of record breaking message
+    // }
+    resetScore();
+    resetLives();
+
+    Snake* to_free = snake_head;
+    
+    initSnake();
+    genApple();
+
+    freeSnake(to_free);
+    SDL_Delay(2 * CRASH_DELAY_TIME);
+}
+
+
 void resetLives(){
 
     lives_text[strlen(lives_text) - 1] += SNAKE_LIVES;
@@ -198,27 +219,6 @@ void detectApple(){
         genApple();
         increaseScore();
     }
-}
-
-
-void resetGame(){
-    
-    int curr_score = getIntScore();
-    if(curr_score > record){
-
-        record = curr_score;
-        // TODO: Print (render) some kind of record breaking message
-    }
-    resetScore();
-    resetLives();
-
-    Snake* to_free = snake_head;
-    
-    initSnake();
-    genApple();
-
-    freeSnake(to_free);
-    SDL_Delay(2 * CRASH_DELAY_TIME);
 }
 
 
@@ -332,9 +332,10 @@ void renderMonitor(SDL_Renderer* renderer){
 }
 
 
-void renderText(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Rect rect){
+void renderText(SDL_Renderer* renderer, TTF_Font* font, 
+                        const char* text, SDL_Rect rect, SDL_Color color){
 
-    SDL_Surface* surface = TTF_RenderText_Solid(font, text, sdl_white);
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 
     TTF_SizeText(font, text, &rect.w, &rect.h);

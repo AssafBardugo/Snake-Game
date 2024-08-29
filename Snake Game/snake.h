@@ -59,18 +59,23 @@
 #define MONITOR_Y       GRID_Y
 
 #define TEXT_FONT_SIZE 28
+#define PAUSE_FONT_SIZE 30
+
+// PAUSE-MESSAGE POSITION:
+#define PAUSE_X     (MONITOR_X + 15)
+#define PAUSE_Y     (MONITOR_Y + 30)
 
 // LIVES-MESSAGE POSITION:
 #define LIVES_X     (MONITOR_X + 13)
-#define LIVES_Y     (MONITOR_Y + (MONITOR_HEIGHT / 8))
+#define LIVES_Y     (MONITOR_Y + 3 * (MONITOR_HEIGHT / 16))
 
 // SCORE-MESSAGE POSITION:
 #define SCORE_X     (MONITOR_X + 13)
-#define SCORE_Y     (MONITOR_Y + 2 * (MONITOR_HEIGHT / 8))
+#define SCORE_Y     (MONITOR_Y + 5 * (MONITOR_HEIGHT / 16))
 
 // RECORD-MESSAGE POSITION:
 #define RECORD_X    (MONITOR_X + 13)
-#define RECORD_Y    (MONITOR_Y + 3 * (MONITOR_HEIGHT / 8))
+#define RECORD_Y    (MONITOR_Y + 6 * (MONITOR_HEIGHT / 16))
 
 
 typedef enum SNAKE_DIRECTION{
@@ -100,10 +105,10 @@ extern Snake_Dir direction;
 extern const char* font_file_path;
 extern char* score_text;
 extern char* lives_text;
+extern char* record;
 extern const char* score_message;
 extern const char* lives_message;
 
-extern int record;
 extern int delay_time;
 extern SDL_Color sdl_white;
 
@@ -135,6 +140,7 @@ void renderSnake(SDL_Renderer* renderer);
 void renderGrid(SDL_Renderer* renderer);
 void renderOutline(SDL_Renderer* renderer);
 void renderMonitor(SDL_Renderer* renderer);
-void renderText(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Rect rect);
+void renderText(SDL_Renderer* renderer, TTF_Font* font, 
+                        const char* text, SDL_Rect rect, SDL_Color color);
 
 #endif /* SNAKE_H */

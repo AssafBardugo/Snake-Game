@@ -10,11 +10,13 @@ char* score_text;
 const char* score_message = "Score: 000";
 char* lives_text;
 const char* lives_message = "Lives: 0";
+// char* record;
+const char* record_message = "Record: ";
 
-int record = 0;     // TODO: save in a file.
 int delay_time = 200;
 
-SDL_Color sdl_white = {255, 255, 255, 255}; // TODO: add all rest colors to here.
+SDL_Color sdl_white = {0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE}; // TODO: add all rest colors to here.
+SDL_Color sdl_green = {0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE};
 /***************************/
 
 int main(int argc, char* argv[]){
@@ -54,6 +56,7 @@ int main(int argc, char* argv[]){
     genApple();
 
     SDL_Delay(INIT_DELAY_TIME);
+    bool pause = false;
 
     while(true){
         while(SDL_PollEvent(&event)){
@@ -65,24 +68,26 @@ int main(int argc, char* argv[]){
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym){
                         case LEFT_KEY:
-                            if(direction != SNAKE_RIGHT)
+                            if(!pause && direction != SNAKE_RIGHT)
                                 direction = SNAKE_LEFT;
                             break;
                         case RIGHT_KEY:
-                            if(direction != SNAKE_LEFT)
+                            if(!pause && direction != SNAKE_LEFT)
                                 direction = SNAKE_RIGHT;
                             break;
                         case UP_KEY:
-                            if(direction != SNAKE_DOWN)
+                            if(!pause && direction != SNAKE_DOWN)
                                 direction = SNAKE_UP;
                             break;
                         case DOWN_KEY:
-                            if(direction != SNAKE_UP)
+                            if(!pause && direction != SNAKE_UP)
                                 direction = SNAKE_DOWN;
+                            break;
+                        case SDLK_SPACE:
+                            pause = 1 - pause;
                             break;
                         case SDLK_ESCAPE:
                             goto GameQuit;
-                            // TODO: add pause key
                         default:
                             break;
                     }
@@ -94,9 +99,14 @@ int main(int argc, char* argv[]){
         SDL_RenderClear(renderer);
 
         /* Render loop start */
-        moveSnake();
-        detectApple();
-        detectCrash();
+        if(pause){
+            SDL_Rect pause_rect = {PAUSE_X, PAUSE_Y, 0, 0};
+            renderText(renderer, font, "Pause ON", pause_rect, sdl_green);
+        }else{
+            moveSnake();
+            detectApple();
+            detectCrash();
+        }
 
         renderSnake(renderer);
         renderApple(renderer);
@@ -108,10 +118,13 @@ int main(int argc, char* argv[]){
         renderMonitor(renderer);
 
         SDL_Rect score_rect = {SCORE_X, SCORE_Y, 0, 0};
-        renderText(renderer, font, score_text, score_rect);
+        renderText(renderer, font, score_text, score_rect, sdl_white);
 
         SDL_Rect lives_rect = {LIVES_X, LIVES_Y, 0, 0};
-        renderText(renderer, font, lives_text, lives_rect);
+        renderText(renderer, font, lives_text, lives_rect, sdl_white);
+
+        SDL_Rect record_rect = {RECORD_X, RECORD_Y, 0, 0};
+        renderText(renderer, font, record_message, record_rect, sdl_white);
         /* Render loop end */
 
         SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, SDL_ALPHA_OPAQUE);
