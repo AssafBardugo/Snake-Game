@@ -9,20 +9,20 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-/*** Can modify by the user ***/
+/*** Can be modify by the user ***/
 #define FULLSCREEN false
 #define USE_GRID_BOARD true
 
-#define LEFT_KEY    SDLK_j  // define in Snake-Game\src\include\SDL_keycode.h
+#define LEFT_KEY    SDLK_j  // Define in src\include\SDL_keycode.h
 #define RIGHT_KEY   SDLK_l
 #define UP_KEY      SDLK_i
 #define DOWN_KEY    SDLK_k
 
+#define SNAKE_LIVES 3   // One digit only!
 #define FIRST_INSTANCE_SNAKE_LENGTH 3   // at least 1
-#define CRASH_DELAY_TIME 500    // in ms
-
-#define TEXT_FONT_SIZE 28
-/*******************************/
+#define CRASH_DELAY_TIME 500
+#define INIT_DELAY_TIME 500
+/**********************************/
 
 
 #if FULLSCREEN
@@ -56,11 +56,21 @@
 #define MONITOR_WIDTH   (((WINDOW_WIDTH - 100) / 3) - 25)
 #define MONITOR_HEIGHT  GRID_HEIGHT
 #define MONITOR_X       (GRID_X + GRID_WIDTH + 25)
-#define MONITOR_Y       GRID_Y   
+#define MONITOR_Y       GRID_Y
+
+#define TEXT_FONT_SIZE 28
+
+// LIVES-MESSAGE POSITION:
+#define LIVES_X     (MONITOR_X + 13)
+#define LIVES_Y     (MONITOR_Y + (MONITOR_HEIGHT / 8))
 
 // SCORE-MESSAGE POSITION:
-#define SCORE_X       (MONITOR_X + 13)
-#define SCORE_Y       (MONITOR_Y + (MONITOR_HEIGHT / 5))
+#define SCORE_X     (MONITOR_X + 13)
+#define SCORE_Y     (MONITOR_Y + 2 * (MONITOR_HEIGHT / 8))
+
+// RECORD-MESSAGE POSITION:
+#define RECORD_X    (MONITOR_X + 13)
+#define RECORD_Y    (MONITOR_Y + 3 * (MONITOR_HEIGHT / 8))
 
 
 typedef enum SNAKE_DIRECTION{
@@ -86,21 +96,30 @@ typedef struct snake{
 extern Apple apple;
 extern Snake* snake_head;
 extern Snake_Dir direction;
-extern char* score_text;
+
 extern const char* font_file_path;
+extern char* score_text;
+extern char* lives_text;
+extern const char* score_message;
+extern const char* lives_message;
+
 extern int record;
 extern int delay_time;
 extern SDL_Color sdl_white;
 
 
+void initText();
 void initSnake();
 void freeSnake(Snake* to_free);
 
 int getIntScore();
 int snakeLength();
+
 void increaseSnake();
 void increaseScore();
 void resetScore();
+void decreaseLives();
+void resetLives();
 
 void moveSnakeRecursive(Snake* track);
 void moveSnake();
@@ -108,14 +127,14 @@ void moveSnake();
 void genApple();
 void detectApple();
 
-void resetSnake();
 void detectCrash();
+void resetGame();
 
 void renderApple(SDL_Renderer* renderer);
 void renderSnake(SDL_Renderer* renderer);
 void renderGrid(SDL_Renderer* renderer);
 void renderOutline(SDL_Renderer* renderer);
 void renderMonitor(SDL_Renderer* renderer);
-void renderText(SDL_Renderer* renderer, TTF_Font* font);
+void renderText(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Rect rect);
 
 #endif /* SNAKE_H */

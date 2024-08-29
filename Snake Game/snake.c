@@ -1,5 +1,16 @@
 #include "snake.h"
 
+void initText(){
+
+    score_text = (char*)malloc((strlen(score_message) + 1) * sizeof(char));
+    strcpy(score_text, score_message);
+
+    lives_text = (char*)malloc((strlen(lives_message) + 1) * sizeof(char));
+    strcpy(lives_text, lives_message);
+    resetLives();
+}
+
+
 void initSnake(){
 
     Snake* new_snake = malloc(sizeof(Snake));
@@ -99,6 +110,31 @@ void resetScore(){
 }
 
 
+void decreaseLives(){
+
+    int i = strlen(lives_text) - 1;
+    --lives_text[i];
+
+    if(lives_text[i] == '0'){
+        resetGame();
+    }
+
+    Snake* to_free = snake_head;
+    
+    initSnake();
+    genApple();
+
+    freeSnake(to_free);
+    SDL_Delay(CRASH_DELAY_TIME);
+}
+
+
+void resetLives(){
+
+    lives_text[strlen(lives_text) - 1] += SNAKE_LIVES;
+}
+
+
 void moveSnakeRecursive(Snake* track){
 
     if(track->next == NULL){
@@ -165,7 +201,7 @@ void detectApple(){
 }
 
 
-void resetSnake(){
+void resetGame(){
     
     int curr_score = getIntScore();
     if(curr_score > record){
@@ -174,6 +210,7 @@ void resetSnake(){
         // TODO: Print (render) some kind of record breaking message
     }
     resetScore();
+    resetLives();
 
     Snake* to_free = snake_head;
     
@@ -181,7 +218,7 @@ void resetSnake(){
     genApple();
 
     freeSnake(to_free);
-    SDL_Delay(CRASH_DELAY_TIME);
+    SDL_Delay(2 * CRASH_DELAY_TIME);
 }
 
 
@@ -190,7 +227,8 @@ void detectCrash(){
     // Does the snake touch the borders?
     if(snake_head->x < 0 || snake_head->x >= GRID_X_SIZE || snake_head->y < 0 || snake_head->y >= GRID_Y_SIZE){
         // Crash!
-        resetSnake();
+        decreaseLives();
+        return;
     }
 
     // Does the snake touch itself?
@@ -203,7 +241,8 @@ void detectCrash(){
 
         if(snake_head->x == track->x && snake_head->y == track->y){
             // Crash!
-            resetSnake();
+            decreaseLives();
+            return;
         }
         track = track->next;
     }
@@ -293,16 +332,13 @@ void renderMonitor(SDL_Renderer* renderer){
 }
 
 
-void renderText(SDL_Renderer* renderer, TTF_Font* font){
+void renderText(SDL_Renderer* renderer, TTF_Font* font, const char* text, SDL_Rect rect){
 
-    SDL_Surface* surface = TTF_RenderText_Solid(font, score_text, sdl_white);
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text, sdl_white);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 
-    SDL_Rect dest_rect = {SCORE_X, SCORE_Y, 0, 0};
-
-    TTF_SizeText(font, score_text, &dest_rect.w, &dest_rect.h);
-
-    SDL_RenderCopy(renderer, texture, NULL, &dest_rect);
+    TTF_SizeText(font, text, &rect.w, &rect.h);
+    SDL_RenderCopy(renderer, texture, NULL, &rect);
 
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);

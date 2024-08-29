@@ -5,9 +5,11 @@ Apple apple;
 Snake* snake_head;
 Snake_Dir direction;
 
+const char* font_file_path = "src/font_file/Retro_Gaming.ttf";
 char* score_text;
 const char* score_message = "Score: 000";
-const char* font_file_path = "src/font_file/Retro_Gaming.ttf";
+char* lives_text;
+const char* lives_message = "Lives: 0";
 
 int record = 0;     // TODO: save in a file.
 int delay_time = 200;
@@ -46,12 +48,12 @@ int main(int argc, char* argv[]){
     );
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    score_text = (char*)malloc((strlen(score_message) + 1) * sizeof(char));
-    strcpy(score_text, score_message);
-
     srand(time(NULL));
+    initText();
     initSnake();
     genApple();
+
+    SDL_Delay(INIT_DELAY_TIME);
 
     while(true){
         while(SDL_PollEvent(&event)){
@@ -104,7 +106,12 @@ int main(int argc, char* argv[]){
         renderOutline(renderer);
 #endif
         renderMonitor(renderer);
-        renderText(renderer, font);
+
+        SDL_Rect score_rect = {SCORE_X, SCORE_Y, 0, 0};
+        renderText(renderer, font, score_text, score_rect);
+
+        SDL_Rect lives_rect = {LIVES_X, LIVES_Y, 0, 0};
+        renderText(renderer, font, lives_text, lives_rect);
         /* Render loop end */
 
         SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, SDL_ALPHA_OPAQUE);
@@ -121,5 +128,6 @@ GameQuit:
     SDL_Quit();
     freeSnake(snake_head);
     free(score_text);
+    free(lives_text);
     return 0;
 }
