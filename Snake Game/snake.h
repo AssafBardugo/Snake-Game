@@ -20,6 +20,8 @@
 
 #define SNAKE_LIVES 3   // One digit only!
 #define FIRST_INSTANCE_SNAKE_LENGTH 3   // at least 1
+
+#define DELAY_TIME 200
 #define CRASH_DELAY_TIME 500
 #define INIT_DELAY_TIME 500
 /**********************************/
@@ -77,6 +79,8 @@
 #define RECORD_X    (MONITOR_X + 13)
 #define RECORD_Y    (MONITOR_Y + 6 * (MONITOR_HEIGHT / 16))
 
+#define MAX(X, Y)   (((X) > (Y)) ? (X) : (Y))
+
 
 typedef enum SNAKE_DIRECTION{
     SNAKE_UP, 
@@ -109,8 +113,8 @@ extern char* record;
 extern const char* score_message;
 extern const char* lives_message;
 
-extern int delay_time;
-extern SDL_Color sdl_white;
+extern int live_score;
+extern bool pause;
 
 
 void initText();

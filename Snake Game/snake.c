@@ -55,8 +55,6 @@ void increaseSnake(){
         // TODO: Has to jump to a new level
     }
 
-    // TODO: Eventually, it appears that the new cell HAS to be added to the tail
-
     Snake* new_cell = malloc(sizeof(Snake));
 
     switch(direction){
@@ -87,6 +85,8 @@ void increaseSnake(){
 
 void increaseScore(){
 
+    ++live_score;
+
     int i = strlen(score_text) - 1;
 
     for(int j = i; j > i - 3; --j){
@@ -111,6 +111,8 @@ void resetScore(){
 
 
 void decreaseLives(){
+
+    live_score = 0;
 
     int i = strlen(lives_text) - 1;
     --lives_text[i];
@@ -211,11 +213,16 @@ void genApple(){
 
 
 void detectApple(){
+    static bool inc_next = false;
+    if(inc_next){
+        increaseSnake();
+        inc_next = false;
+    }
 
     // Look if the snake is eating the apple:
     if(snake_head->x == apple.x && snake_head->y == apple.y){
 
-        increaseSnake();
+        inc_next = true;
         genApple();
         increaseScore();
     }
@@ -264,22 +271,42 @@ void renderApple(SDL_Renderer* renderer){
 
 
 void renderSnake(SDL_Renderer* renderer){
+    static bool head_blinks = false;
+    if(pause){
+        head_blinks = 1 - head_blinks;
+    }else{
+        head_blinks = false;
+    }
 
-    SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
-
+    Snake* track = snake_head;
     SDL_Rect segment;
+    segment.x = GRID_X + (track->x * CELL_SIZE);
+    segment.y = GRID_Y + (track->y * CELL_SIZE);
     segment.w = CELL_SIZE;
     segment.h = CELL_SIZE;
 
-    Snake* track = snake_head;
+    if(!head_blinks){
+        SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
+        SDL_RenderFillRect(renderer, &segment);
+    }
+
+    track = track->next;
+    bool green_cell = false;
+
     while(track != NULL){
 
         segment.x = GRID_X + (track->x * CELL_SIZE);
         segment.y = GRID_Y + (track->y * CELL_SIZE);
 
+        if(green_cell){
+            SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
+        }else{
+            SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
+        }
         SDL_RenderFillRect(renderer, &segment);
 
         track = track->next;
+        green_cell = 1 - green_cell;
     }
 }
 
@@ -306,7 +333,7 @@ void renderGrid(SDL_Renderer* renderer){
 
 void renderOutline(SDL_Renderer* renderer){
 
-    SDL_SetRenderDrawColor(renderer, 0x55, 0x55, 0xff, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE);
 
     SDL_Rect outline;
     outline.x = GRID_X;

@@ -13,7 +13,8 @@ const char* lives_message = "Lives: 0";
 // char* record;
 const char* record_message = "Record: ";
 
-int delay_time = 200;
+int live_score = 0;
+bool pause = false;
 
 SDL_Color sdl_white = {0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE}; // TODO: add all rest colors to here.
 SDL_Color sdl_green = {0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE};
@@ -56,7 +57,6 @@ int main(int argc, char* argv[]){
     genApple();
 
     SDL_Delay(INIT_DELAY_TIME);
-    bool pause = false;
 
     while(true){
         while(SDL_PollEvent(&event)){
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]){
         SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, SDL_ALPHA_OPAQUE);
         SDL_RenderPresent(renderer);
 
-        SDL_Delay(delay_time);
+        SDL_Delay(MAX(DELAY_TIME - live_score * 3, 30));
     }
 GameQuit:
 
