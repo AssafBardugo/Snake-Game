@@ -1,5 +1,5 @@
 
-# Console Snake Game in C
+# Snake Game in C using SDL
 
 Compilation and running:
 ```
@@ -9,10 +9,10 @@ $ ./snake
 
 Control keys:
 ```
-h - left
-j - down
-k - up
-l - left
+j - left
+l - right
+i - up
+k - down
 
 Space - pause
 Esc - quit
