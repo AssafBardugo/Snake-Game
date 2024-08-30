@@ -18,4 +18,4 @@ Space - pause
 Esc - quit
 ```
 
-<img src="Screenshot.png" alt="Screenshot" width="850" height="900">
+<img src="Screenshot.png" alt="Screenshot" width="425" height="450">
