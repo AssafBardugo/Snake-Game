@@ -17,5 +17,5 @@ main.o: main.c snake.h
 snake.o: snake.c snake.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c snake.c $(LIBS)
 
-clean: 
+clean:
 	rm -f $(OBJS)
