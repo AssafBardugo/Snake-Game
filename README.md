@@ -1,6 +1,8 @@
 
 # Snake Game in C using SDL
 
+<img src="Screenshot.png" alt="Screenshot" width="425" height="450">
+
 Compilation and running:
 ```
 $ ./build.sh
