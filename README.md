@@ -19,3 +19,4 @@ Esc - quit
 ```
 
 ![Screenshot](Screenshot.png)
+<img src="Screenshot.png" alt="Screenshot" width="500" height="300">
