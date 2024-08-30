@@ -17,3 +17,5 @@ k - down
 Space - pause
 Esc - quit
 ```
+
+![Screenshot](Screenshot.png)
