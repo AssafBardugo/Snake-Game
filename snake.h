@@ -109,7 +109,7 @@ extern Snake_Dir direction;
 extern const char* font_file_path;
 extern char* score_text;
 extern char* lives_text;
-extern char* record;
+// extern char* record;
 extern const char* score_message;
 extern const char* lives_message;
 
