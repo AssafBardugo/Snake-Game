@@ -2,7 +2,7 @@
 # Snake Game in C using SDL
 
 Screenshot from the game:
-<img src="Screenshot.png" alt="Screenshot" width="425" height="450">
+<img src="path/to/image" alt="Alt text" style="float: right; margin-left: 20px;">
 
 Compilation and running:
 ```
