@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
 
-INCLUDES = -Isrc/Include -Lsrc/lib
+INCLUDES = -Include -Llib
 LIBS = -lSDL2main -lSDL2 -lSDL2_ttf
 
 SRCS = main.c snake.c
@@ -18,4 +18,4 @@ snake.o: snake.c snake.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c snake.c $(LIBS)
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) snake
